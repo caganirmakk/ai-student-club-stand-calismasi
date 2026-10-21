@@ -1,0 +1,44 @@
+# Python & Derleme Dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Ortam Değişkenleri ve Gizli Anahtarlar
+.env
+.env.*
+*.env
+*.key
+*.pem
+secrets.json
+
+# Sanal Ortamlar
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Test ve Geçici Çalışma Dosyaları
+scratch*
+*.scratch.*
+scratch_*.png
+test_output/
+*.log
+
+# KVKK & Ziyaretçi Gizliliği (Kartlar ve Çekilen Fotoğraflar)
+# .gitkeep dosyalarının korunması için özel istisna tanımları:
+static/cards/*
+!static/cards/.gitkeep
+static/snaps/*
+!static/snaps/.gitkeep
+static/latest_snap.png
+
+# İşletim Sistemi Kalıntıları
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.swp
