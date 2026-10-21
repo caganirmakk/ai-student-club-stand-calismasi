@@ -68,14 +68,32 @@ Başlatıldıktan sonra tarayıcınızda otomatik olarak açılır:
 
 ---
 
-## 📶 Stant Günü Ağ & Wi-Fi Rehberi (Çok Önemli!)
+## 🌐 Canlıya Alma ve Mobil İndirme Seçenekleri
 
-Ziyaretçilerin kartlarını telefonlarına indirebilmeleri için stant bilgisayarı ile telefonların aynı ağda olması gerekir.
+### 🥇 1. Seçenek: Cloudflare Tunnel (Tavsiye Edilen — Sıfır Sürtünme)
+Sistem başlatıldığında otomatik olarak Cloudflare Quick Tunnel açar (`https://*.trycloudflare.com`).
+- **Üniversite Wi-Fi İzolasyonunu Aşar:** Öğrencilerin stant Wi-Fi'ına bağlanmasına gerek kalmaz.
+- **Kendi Mobil Verisiyle İndirme:** Ziyaretçi kendi 4.5G/5G internetiyle QR'ı taratır ve saniyeler içinde kartını indirir.
+- **Tamamen Ücretsiz & HTTPS:** Doğrudan SSL sertifikalı güvenli bağlantı sağlar.
 
-### A. Telefon Bağlantı Noktası (Hotspot) ile Kullanım (Tavsiye Edilen)
+```bash
+# Otomatik Cloudflare Tüneli ile başlatma:
+python run_stand.py
+
+# (Opsiyonel) Tünelsiz, sadece yerel ağda çalıştırmak isterseniz:
+python run_stand.py --no-tunnel
+```
+
+---
+
+## 📶 Stant Günü Ağ & Wi-Fi Rehberi (İnternetsiz / Offline B Planı)
+
+Eğer stant alanında mobil veri çekmiyorsa veya internet bağlantısı kesilirse:
+
+### A. Telefon Bağlantı Noktası (Hotspot) ile Kullanım
 1. Telefonunuzdan **Kişisel Erişim Noktası / Hotspot** açın.
 2. Stant dizüstü bilgisayarını bu ağa bağlayın.
-3. Sistemi çalıştırdığınızda `network_utils.py` otomatik olarak Hotspot IP'sini (`192.168.43.x` vb.) tespit eder ve QR kodları bu IP üzerinden üretir.
+3. Sistemi `--no-tunnel` ile çalıştırdığınızda `network_utils.py` otomatik olarak Hotspot IP'sini (`192.168.43.x` vb.) tespit eder ve QR kodları bu IP üzerinden üretir.
 
 ### B. Manuel IP Sabitleme
 Eğer bilgisayarda birden fazla ağ kartı (Ethernet, Sanal Ağlar, VPN) varsa, QR kodun doğru IP ile basılması için terminalde IP belirtebilirsiniz:
@@ -115,10 +133,10 @@ ai_club_stand/
 ├── card_generator.py         # Pillow & rembg ile 1080x1920 kompozisyon motoru
 ├── download_server.py        # FastAPI mobil indirme ve görsel servis ucu
 ├── cleanup_daemon.py         # 5 dakikalık KVKK temizlik servisi
-├── network_utils.py          # Yerel stant IP tespit mekanizması
-├── stats_engine.py           # İsim ve bölüm algoritmasına göre stat motoru
+├── network_utils.py          # Yerel stant IP ve genel tünel çözümleyici
+├── tunnel_manager.py         # Cloudflare Quick Tunnel otomatik yöneticisi
 ├── rehearsal_test.py         # 20 kartlık prova ve stres testi
-├── run_stand.py              # Eşzamanlı başlatıcı yönetici
+├── run_stand.py              # Eşzamanlı başlatıcı yönetici (API + Tunnel + UI)
 ├── requirements.txt          # Python paket bağımlılıkları
 ├── .gitignore                # Güvenlik ve gizlilik filtresi
 └── README.md                 # Proje dokümantasyonu

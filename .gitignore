@@ -35,6 +35,7 @@ static/cards/*
 static/snaps/*
 !static/snaps/.gitkeep
 static/latest_snap.png
+static/.tunnel_url
 
 # İşletim Sistemi Kalıntıları
 .DS_Store

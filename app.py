@@ -11,7 +11,8 @@ import streamlit.components.v1 as components
 
 from stats_engine import calculate_stats
 from card_generator import generate_card, CARDS_DIR, SNAPS_DIR
-from network_utils import get_candidate_ips, get_primary_stand_ip
+from network_utils import get_candidate_ips, get_primary_stand_ip, get_primary_base_url
+from tunnel_manager import get_current_tunnel_url
 
 # Sayfa yapılandırması
 st.set_page_config(
@@ -143,9 +144,18 @@ with col_title:
     st.markdown('<div class="hero-desc">Fotoğrafınızı çekin, kartınızı hazırlayalım; Instagram Story formatında telefonunuza indirin!</div>', unsafe_allow_html=True)
 
 with col_settings:
-    with st.expander("⚙️ Stant Ağ & Wi-Fi", expanded=False):
-        selected_ip = st.selectbox("Stant Wi-Fi IP:", options=candidate_ips, index=0)
-        host_choice = st.text_input("QR Hedef URL:", value=f"http://{selected_ip}:8000")
+    with st.expander("⚙️ Ağ & Mobil Erişim", expanded=False):
+        current_tunnel = get_current_tunnel_url()
+        if current_tunnel:
+            st.success(f"🌐 **Canlı Tünel Aktif!**\n\n`{current_tunnel}`")
+            st.caption("✨ Ziyaretçiler telefonlarından Wi-Fi'a bağlanmak zorunda olmadan indirebilir.")
+        else:
+            st.info("📶 **Yerel Ağ Modu:** Telefonların stant Wi-Fi / Hotspot ağına bağlı olması gerekir.")
+
+        default_base = get_primary_base_url()
+        host_choice = st.text_input("QR Hedef URL:", value=default_base)
+        
+        selected_ip = st.selectbox("Yerel IP Alternatifleri:", options=candidate_ips, index=0)
         
         if st.button("🩺 Bağlantı & Sağlık Testi", use_container_width=True):
             try:

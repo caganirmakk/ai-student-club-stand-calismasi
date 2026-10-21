@@ -47,6 +47,30 @@ def get_primary_stand_ip() -> str:
     candidates = get_candidate_ips()
     return candidates[0] if candidates else "127.0.0.1"
 
+def get_primary_base_url() -> str:
+    """
+    QR kod ve mobil erişim için en uygun temel adresi döner:
+    1. Aktif Cloudflare Tünel adresi (varsa https://...trycloudflare.com)
+    2. STAND_PUBLIC_URL veya STAND_HOST ortam değişkeni
+    3. Yerel ağ IP'si (http://192.168.x.x:8000)
+    """
+    try:
+        from tunnel_manager import get_current_tunnel_url
+        t_url = get_current_tunnel_url()
+        if t_url:
+            return t_url
+    except Exception:
+        pass
+
+    env_public = os.environ.get("STAND_PUBLIC_URL") or os.environ.get("STAND_HOST")
+    if env_public:
+        env_public = env_public.strip().rstrip("/")
+        if env_public.startswith("http://") or env_public.startswith("https://"):
+            return env_public
+        return f"http://{env_public}:8000"
+
+    return f"http://{get_primary_stand_ip()}:8000"
+
 if __name__ == "__main__":
     print("Aday IP'ler:", get_candidate_ips())
     print("Seçilen Stant IP:", get_primary_stand_ip())
