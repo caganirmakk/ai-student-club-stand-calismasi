@@ -125,6 +125,47 @@ python run_stand.py --no-tunnel
 
 ---
 
+## 🍎 macOS (MacBook) Kurulum & Kullanım Rehberi
+
+Apple Silicon (M1 / M2 / M3 / M4) veya Intel işlemcili MacBook kullanan kulüp üyeleri için optimize edilmiş adımlar:
+
+### 1. Homebrew ile Gereksinimler
+Terminal üzerinden Homebrew ile Python ve Cloudflared yükleyin:
+```bash
+brew install python cloudflared
+```
+
+### 2. Sanal Ortam ve Paketlerin Kurulumu
+```bash
+# Proje dizininde sanal ortam oluşturun
+python3 -m venv venv
+source venv/bin/activate
+
+# Paketleri yükleyin
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+*(Apple Silicon mimarisinde `rembg` ve `onnxruntime` donanım hızlandırmalı ARM64 motoruyla çok hızlı çalışır.)*
+
+### 3. Kamera Güvenlik İzni (macOS Özel)
+macOS, güvenlik gereği tarayıcıların kameraya erişimini onaylatır:
+1. Kiosk arayüzünü Safari yerine **Google Chrome**, **Brave** veya **Firefox** ile açmanız tavsiye edilir.
+2. `http://localhost:8501` açıldığında sol üstteki *"Kameraya erişmek istiyor"* bildirimine **İzin Ver** deyin.
+3. Kamera açılmazsa: **Sistem Ayarları (System Settings) > Gizlilik ve Güvenlik (Privacy & Security) > Kamera (Camera)** sekmesinden kullandığınız tarayıcı ve terminale kamera izni verildiğini kontrol edin.
+
+### 4. MacBook'ta Başlatma
+```bash
+# Canlı Cloudflare Tüneli ile çalıştırma:
+python3 run_stand.py
+
+# Çevrimdışı yerel ağ modu:
+python3 run_stand.py --no-tunnel
+```
+
+> **İpucu (AirPlay Port Çakışması):** macOS Monterey ve sonrasında Apple'ın yerel AirPlay Alıcısı bazen port dinleyebilir. Eğer port meşgul uyarısı alırsanız: `Sistem Ayarları > Genel > AirDrop ve Handoff > AirPlay Alıcısı` ayarını geçici olarak kapatabilirsiniz.
+
+---
+
 ## 📶 Stant Günü Ağ & Wi-Fi Rehberi (Offline B Planı)
 
 İnternetsiz modda ziyaretçilerin kart indirebilmesi için:

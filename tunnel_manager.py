@@ -27,11 +27,17 @@ def find_cloudflared() -> Optional[str]:
     if cmd_path:
         return cmd_path
 
-    # 2. Standart Windows Kurulum Yolları
+    # 2. Standart Windows ve macOS Kurulum Yolları
     candidates = [
+        # Windows
         r"C:\Program Files (x86)\cloudflared\cloudflared.exe",
         r"C:\Program Files\cloudflared\cloudflared.exe",
-        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe\cloudflared.exe")
+        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe\cloudflared.exe"),
+        # macOS (Homebrew Apple Silicon & Intel)
+        "/opt/homebrew/bin/cloudflared",
+        "/usr/local/bin/cloudflared",
+        # Linux
+        "/usr/bin/cloudflared"
     ]
     for p in candidates:
         if os.path.exists(p):
