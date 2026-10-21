@@ -1,6 +1,6 @@
 # ⚡ Altınbaş AI Club — Stant Kart Üretim & Mobil İndirme Sistemi
 
-Altınbaş Üniversitesi Yapay Zeka Kulübü tanıtım stantları için geliştirilmiş, ziyaretçilere anlık olarak kişiselleştirilmiş **AI Muse Edition** veya **Player Edition (FUT)** dijital kartı üreten ve QR kod ile telefonlarına indirmelerini sağlayan tam teşekküllü kiosk uygulamasıdır.
+Altınbaş AI Club tanıtım stantları için geliştirilmiş, ziyaretçilere anlık olarak kişiselleştirilmiş **AI Muse Edition** veya **Player Edition (FUT)** dijital kartı üreten ve QR kod ile telefonlarına indirmelerini sağlayan tam teşekküllü kiosk uygulamasıdır.
 
 ---
 
@@ -11,109 +11,129 @@ Altınbaş Üniversitesi Yapay Zeka Kulübü tanıtım stantları için gelişti
   - **Muse Edition:** Yaratıcı ve estetik odaklı, Montserrat ExtraBold tipografisiyle lüks/moda dergisi kimliği.
   - **Player Edition:** EA FC / FUT tarzı, Bebas Neue tipografisiyle enerjik ve dinamik spor kartı kimliği.
 - **🪄 Otomatik Arka Plan Ayrıştırma (`rembg`):** Stant ortamındaki kalabalık arka planı izole eder, yumuşak neon aura ve derinlik efektleri ekler.
+- **🌐 Dahili Cloudflare Quick Tunnel:** Üniversite Wi-Fi'ındaki cihaz izolasyonunu (AP isolation) aşar; ziyaretçiler kendi 4.5G/5G mobil verileriyle QR'ı taratıp kartı anında indirebilir.
 - **🔒 KVKK & Veri Gizliliği (Zero-Retention):**
   - **128-Bit Kriptografik Token:** Her kart `secrets.token_hex(16)` ile tahmin edilemez 32 karakterlik güvenli bir ID ile üretilir.
   - **5 Dakika TTL (Otomatik İmha):** Kart ve ham çekim fotoğrafları üretildikten 5 dakika sonra arka plan temizlik servisi (`cleanup_daemon.py`) tarafından kalıcı olarak silinir.
   - **Güvenli Servis:** Doğrudan statik dizin erişimi kapalıdır; tüm indirmeler süre ve token kontrolünden geçer (`Cache-Control: no-store`).
-- **📶 Akıllı Yerel Ağ Çözümleme:** İnternet erişimi olmasa dahi yerel stant ağını veya telefon bağlantı noktasını (Hotspot) otomatik tespit ederek mobil uyumlu QR kod oluşturur.
 
 ---
 
 ## 🏛️ Mimari ve Servisler
 
-Sistem tek komutla eşzamanlı çalışan iki servisten oluşur:
+Sistem tek komutla eşzamanlı çalışan servislerden oluşur:
 
 ```mermaid
 flowchart LR
     A["Kullanıcı (Stant Kamerası)"] --> B["Streamlit Kiosk (:8501)"]
     B --> C["card_generator.py (Pillow + rembg)"]
     C --> D["FastAPI Servisi (:8000)"]
-    D --> E["Mobil Tarayıcı (QR Okutma)"]
-    F["cleanup_daemon.py"] -.->|"5 dk sonra kalıcı silme"| C
+    D --> E["Cloudflare Quick Tunnel (HTTPS)"]
+    E --> F["Mobil Tarayıcı (QR Okutma)"]
+    G["cleanup_daemon.py"] -.->|"5 dk sonra kalıcı silme"| C
 ```
 
 1. **Streamlit Arayüzü (`:8501`):** Stant görevlileri ve ziyaretçiler için çekim, isim, bölüm seçimi ve önizleme ekranı.
 2. **FastAPI Sunucusu (`:8000`):** QR indirme sayfası, kart servis ucu ve sistem sağlık kontrolü (`/health`).
-3. **Temizlik Daemon'u:** Arka planda 20 saniyede bir çalışarak süresi dolan dosyaları bellekten ve diskten temizler.
+3. **Cloudflare Tunnel:** `http://localhost:8000` portunu genel internete güvenli HTTPS ile bağlar.
+4. **Temizlik Daemon'u:** Arka planda 20 saniyede bir çalışarak süresi dolan dosyaları bellekten ve diskten temizler.
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## 🛠️ Detaylı Kurulum Adımları
 
-### 1. Gereksinimler
-- Python 3.10 veya üzeri
-- Web kamerası (Dahili veya USB)
+Projeyi sıfırdan kurmak ve çalıştırmak için aşağıdaki adımları sırasıyla takip edin:
 
-### 2. Kurulum
+### 1. Ön Gereksinimler
+- **Python 3.10 veya üzeri:** [python.org](https://www.python.org/) üzerinden indirirken **"Add Python to PATH"** kutucuğunu mutlaka işaretleyin.
+- **Web Kamerası:** Dizüstü bilgisayarın dahili kamerası veya harici USB kamera.
+- **Git:** Kodları klonlamak için.
+
+### 2. Repoyu Klonlama
+```bash
+git clone https://github.com/caganirmakk/ai-student-club-stand-calismasi.git
+cd ai-student-club-stand-calismasi
+```
+
+### 3. Sanal Ortam (Virtualenv) Oluşturma (Tavsiye Edilir)
+Bağımlılıkların sistem genelindeki diğer paketlerle çakışmaması için:
 
 ```bash
-# Proje dizinine geçin
-cd ai_club_stand
+# Sanal ortam oluştur
+python -m venv venv
 
-# Gerekli kütüphaneleri yükleyin
+# Sanal ortamı aktif et:
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# Windows (CMD):
+.\venv\Scripts\activate.bat
+# macOS / Linux:
+source venv/bin/activate
+```
+
+### 4. Python Paketlerini Yükleme
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3. Tek Komutla Çalıştırma
+### 5. Cloudflared Kurulumu (Canlı Mobil Tünel İçin)
+Ziyaretçilerin telefonlarından hiçbir Wi-Fi bağımlılığı olmadan kart indirebilmesi için Cloudflare tünel aracını yükleyin:
 
-Tüm servisleri (FastAPI + Streamlit + Temizlik Daemon'u) tek seferde başlatmak için:
+- **Windows (PowerShell):**
+  ```powershell
+  winget install --id Cloudflare.cloudflared -e
+  ```
+- **macOS (Homebrew):**
+  ```bash
+  brew install cloudflared
+  ```
+- **Linux (Debian/Ubuntu):**
+  ```bash
+  sudo apt-get install cloudflared
+  ```
+*(Not: `cloudflared` kurulu değilse sistem otomatik olarak yerel Hotspot/Wi-Fi moduna geçer.)*
+
+### 6. Stant Öncesi İlk Isınma ve Test (Çok Önemli!)
+Arka plan ayrıştırma kütüphanesi (`rembg`), ilk çalıştırıldığında `u2netp` model ağırlıklarını internetten otomatik olarak indirir. Stant alanına gitmeden önce evde/ofiste internet varken şu testi bir kez çalıştırarak modelin önceden hazır olmasını sağlayın:
 
 ```bash
-python run_stand.py
+python rehearsal_test.py
 ```
-
-Başlatıldıktan sonra tarayıcınızda otomatik olarak açılır:
-- **Kiosk Arayüzü:** `http://localhost:8501`
-- **İndirme API & Sağlık:** `http://localhost:8000/health`
+*(Bu komut 20 kartlık prova yapar ve sistemin hatasız çalıştığını doğrular.)*
 
 ---
 
-## 🌐 Canlıya Alma ve Mobil İndirme Seçenekleri
+## 🚀 Çalıştırma
 
-### 🥇 1. Seçenek: Cloudflare Tunnel (Tavsiye Edilen — Sıfır Sürtünme)
-Sistem başlatıldığında otomatik olarak Cloudflare Quick Tunnel açar (`https://*.trycloudflare.com`).
-- **Üniversite Wi-Fi İzolasyonunu Aşar:** Öğrencilerin stant Wi-Fi'ına bağlanmasına gerek kalmaz.
-- **Kendi Mobil Verisiyle İndirme:** Ziyaretçi kendi 4.5G/5G internetiyle QR'ı taratır ve saniyeler içinde kartını indirir.
-- **Tamamen Ücretsiz & HTTPS:** Doğrudan SSL sertifikalı güvenli bağlantı sağlar.
-
+### Canlı Mod (Cloudflare Tüneli Aktif — Tavsiye Edilen)
 ```bash
-# Otomatik Cloudflare Tüneli ile başlatma:
 python run_stand.py
+```
+Bu komut sırasıyla:
+1. Mobil indirme sunucusunu (`FastAPI :8000`),
+2. Cloudflare canlı HTTPS tünelini (`https://*.trycloudflare.com`),
+3. Kiosk arayüzünü (`Streamlit :8501`) başlatır.
 
-# (Opsiyonel) Tünelsiz, sadece yerel ağda çalıştırmak isterseniz:
+Tarayıcınızda açılan **http://localhost:8501** ekranında tarayıcının kamera erişim iznini onaylayın.
+
+### Çevrimdışı / İnternetsiz Mod (Sadece Yerel Ağ)
+Stant alanında internet bağlantısı bulunmuyorsa yerel Hotspot modunda çalıştırmak için:
+```bash
 python run_stand.py --no-tunnel
 ```
 
 ---
 
-## 📶 Stant Günü Ağ & Wi-Fi Rehberi (İnternetsiz / Offline B Planı)
+## 📶 Stant Günü Ağ & Wi-Fi Rehberi (Offline B Planı)
 
-Eğer stant alanında mobil veri çekmiyorsa veya internet bağlantısı kesilirse:
-
-### A. Telefon Bağlantı Noktası (Hotspot) ile Kullanım
-1. Telefonunuzdan **Kişisel Erişim Noktası / Hotspot** açın.
-2. Stant dizüstü bilgisayarını bu ağa bağlayın.
-3. Sistemi `--no-tunnel` ile çalıştırdığınızda `network_utils.py` otomatik olarak Hotspot IP'sini (`192.168.43.x` vb.) tespit eder ve QR kodları bu IP üzerinden üretir.
-
-### B. Manuel IP Sabitleme
-Eğer bilgisayarda birden fazla ağ kartı (Ethernet, Sanal Ağlar, VPN) varsa, QR kodun doğru IP ile basılması için terminalde IP belirtebilirsiniz:
-
-```bash
-# Windows PowerShell:
-$env:STAND_IP="192.168.1.100"
-python run_stand.py
-
-# Linux / macOS:
-export STAND_IP="192.168.1.100"
-python run_stand.py
-```
-
-### C. Windows Güvenlik Duvarı İzni
-Ziyaretçilerin telefonundan bağlantı hatası almaması için Windows Güvenlik Duvarı'nda Python'a yerel ağ erişim izni verildiğinden emin olun. Gerekirse PowerShell (Yönetici) ile:
-
-```powershell
-New-NetFirewallRule -DisplayName "AI Club Stand Kiosk" -Direction Inbound -LocalPort 8000,8501 -Protocol TCP -Action Allow
-```
+İnternetsiz modda ziyaretçilerin kart indirebilmesi için:
+1. Telefonunuzdan **Kişisel Erişim Noktası / Hotspot** açın ve bilgisayarı bu ağa bağlayın.
+2. Sistemi `--no-tunnel` ile çalıştırdığınızda `network_utils.py` otomatik olarak Hotspot IP'sini (`192.168.43.x` vb.) tespit eder.
+3. Windows Güvenlik Duvarı'ndan yerel bağlantılara izin verildiğinden emin olun (Gerekirse PowerShell Yönetici ile):
+   ```powershell
+   New-NetFirewallRule -DisplayName "AI Club Stand Kiosk" -Direction Inbound -LocalPort 8000,8501 -Protocol TCP -Action Allow
+   ```
 
 ---
 
@@ -144,18 +164,7 @@ ai_club_stand/
 
 ---
 
-## 🧪 Stres ve Dayanıklılık Testi
-
-Stant açılmadan önce sistemin hızını ve hata vermediğini doğrulamak için prova script'ini çalıştırabilirsiniz:
-
-```bash
-python rehearsal_test.py
-```
-*(20 kartlık ardışık üretim gerçekleştirir ve ortalama kart üretim süresini raporlar.)*
-
----
-
 ## 📄 Lisans & Telif
 
 - Tipografi dosyaları ([Montserrat](https://fonts.google.com/specimen/Montserrat), [Bebas Neue](https://fonts.google.com/specimen/Bebas+Neue)) **SIL Open Font License (OFL)** kapsamındadır.
-- Bu proje **Altınbaş Üniversitesi Yapay Zeka Kulübü** etkinlikleri için geliştirilmiştir.
+- Bu proje **Altınbaş AI Club** etkinlikleri için geliştirilmiştir.
